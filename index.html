@@ -5,30 +5,183 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>1-Minute Speed Math - Dynamic Leveling</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg-1: #0f172a;
+        --bg-2: #1e293b;
+        --panel: rgba(255, 255, 255, 0.14);
+        --panel-strong: rgba(255, 255, 255, 0.2);
+        --line: rgba(255, 255, 255, 0.24);
+        --text-main: #e8eefb;
+        --text-soft: #aab5d2;
+        --accent: #63e6be;
+        --accent-2: #5dade2;
+        --danger: #ff7675;
+      }
+      body[data-theme="light"] {
+        --bg-1: #dbeafe;
+        --bg-2: #f8fafc;
+        --panel: rgba(255, 255, 255, 0.82);
+        --panel-strong: rgba(255, 255, 255, 0.92);
+        --line: rgba(148, 163, 184, 0.35);
+        --text-main: #0f172a;
+        --text-soft: #475569;
+        --accent: #0ea5e9;
+        --accent-2: #14b8a6;
+      }
+
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f0f4f8;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 20% 20%, #23395b 0%, transparent 30%),
+          radial-gradient(circle at 80% 10%, #164e63 0%, transparent 28%),
+          linear-gradient(135deg, var(--bg-1), var(--bg-2));
         display: flex;
         justify-content: center;
         align-items: center;
         min-height: 100vh;
         margin: 0;
         padding: 20px;
-        color: #333;
+        color: var(--text-main);
+        position: relative;
+        overflow-x: hidden;
+      }
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(70px);
+        z-index: 0;
+        pointer-events: none;
+      }
+      body::before {
+        width: 320px;
+        height: 320px;
+        background: rgba(99, 230, 190, 0.24);
+        top: -120px;
+        left: -80px;
+      }
+      body::after {
+        width: 300px;
+        height: 300px;
+        background: rgba(93, 173, 226, 0.2);
+        right: -90px;
+        bottom: -90px;
+      }
+      body[data-theme="light"]::before {
+        background: rgba(56, 189, 248, 0.2);
+      }
+      body[data-theme="light"]::after {
+        background: rgba(16, 185, 129, 0.16);
       }
       .container {
-        background-color: white;
+        background: linear-gradient(150deg, var(--panel-strong), var(--panel));
         padding: 40px;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-radius: 22px;
+        box-shadow: 0 20px 60px rgba(2, 8, 23, 0.45);
+        border: 1px solid var(--line);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
         text-align: center;
         width: 100%;
         max-width: 760px;
+        position: relative;
+        z-index: 1;
+        animation: fade-rise 0.6s ease;
       }
       h1 {
         margin-top: 0;
-        font-size: 26px;
-        color: #2c3e50;
+        font-size: 28px;
+        letter-spacing: 0.4px;
+        color: #f8fbff;
+        text-shadow: 0 8px 26px rgba(2, 8, 23, 0.3);
+      }
+      body[data-theme="light"] h1 {
+        color: #0f172a;
+        text-shadow: none;
+      }
+      p,
+      li,
+      label {
+        color: var(--text-soft);
+      }
+      .top-controls {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 14px;
+      }
+      .theme-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        padding: 8px 12px;
+        color: var(--text-soft);
+        font-size: 13px;
+        backdrop-filter: blur(8px);
+      }
+      body[data-theme="light"] .theme-switch {
+        background: rgba(255, 255, 255, 0.75);
+        border-color: rgba(148, 163, 184, 0.45);
+      }
+      .switch-shell {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        width: 50px;
+        height: 28px;
+      }
+      .switch-shell input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        cursor: pointer;
+      }
+      .switch-track {
+        width: 100%;
+        height: 100%;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.2);
+        transition: background 0.25s ease;
+      }
+      body[data-theme="light"] .switch-track {
+        background: rgba(148, 163, 184, 0.35);
+        border-color: rgba(100, 116, 139, 0.5);
+      }
+      .switch-thumb {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.35);
+        transition: transform 0.25s ease;
+      }
+      .switch-shell input:checked + .switch-track {
+        background: linear-gradient(
+          135deg,
+          rgba(14, 165, 233, 0.6),
+          rgba(20, 184, 166, 0.6)
+        );
+      }
+      .switch-shell input:checked + .switch-track + .switch-thumb {
+        transform: translateX(22px);
+      }
+      .theme-mode {
+        min-width: 38px;
+        text-align: left;
+        color: var(--text-main);
+        font-weight: 600;
       }
       .stats {
         display: flex;
@@ -36,18 +189,28 @@
         font-size: 18px;
         font-weight: bold;
         margin-bottom: 20px;
-        background: #ecf0f1;
+        background: rgba(255, 255, 255, 0.12);
         padding: 10px 15px;
-        border-radius: 8px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
       }
       .time-text {
-        color: #e74c3c;
+        color: #ff9f9f;
+      }
+      body[data-theme="light"] .time-text {
+        color: #dc2626;
       }
       .score-text {
-        color: #27ae60;
+        color: #9af5d4;
+      }
+      body[data-theme="light"] .score-text {
+        color: #047857;
       }
       .level-text {
-        color: #8e44ad;
+        color: #93c5fd;
+      }
+      body[data-theme="light"] .level-text {
+        color: #1d4ed8;
       }
 
       .question-box {
@@ -56,19 +219,46 @@
         margin: 30px 0;
         letter-spacing: 2px;
         min-height: 80px;
+        color: #f7fbff;
+        text-shadow: 0 10px 30px rgba(8, 47, 73, 0.5);
+      }
+      body[data-theme="light"] .question-box {
+        color: #0f172a;
+        text-shadow: none;
       }
       input[type="number"] {
         width: 80%;
         padding: 15px;
         font-size: 24px;
         text-align: center;
-        border: 2px solid #bdc3c7;
-        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 14px;
         outline: none;
-        transition: border-color 0.3s;
+        transition:
+          border-color 0.3s,
+          box-shadow 0.3s;
+        background: rgba(255, 255, 255, 0.12);
+        color: #f8fbff;
+        backdrop-filter: blur(6px);
+      }
+      body[data-theme="light"] input[type="number"] {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.92);
+        border-color: rgba(148, 163, 184, 0.6);
       }
       input[type="number"]:focus {
-        border-color: #3498db;
+        border-color: rgba(99, 230, 190, 0.85);
+        box-shadow: 0 0 0 4px rgba(99, 230, 190, 0.16);
+      }
+      body[data-theme="light"] input[type="number"]:focus {
+        border-color: rgba(14, 165, 233, 0.7);
+        box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.14);
+      }
+      input::placeholder {
+        color: #d2ddf2;
+      }
+      body[data-theme="light"] input::placeholder {
+        color: #64748b;
       }
       input[type="number"]::-webkit-inner-spin-button,
       input[type="number"]::-webkit-outer-spin-button {
@@ -76,19 +266,23 @@
         margin: 0;
       }
       button {
-        background-color: #3498db;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
         color: white;
-        border: none;
+        border: 1px solid rgba(255, 255, 255, 0.22);
         padding: 14px 28px;
         font-size: 18px;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
         margin-top: 20px;
         font-weight: bold;
-        transition: background-color 0.3s;
+        transition:
+          transform 0.2s,
+          box-shadow 0.25s;
+        box-shadow: 0 10px 30px rgba(13, 148, 136, 0.3);
       }
       button:hover {
-        background-color: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 14px 34px rgba(13, 148, 136, 0.42);
       }
       #game-screen,
       #end-screen {
@@ -102,16 +296,23 @@
         gap: 14px;
       }
       .history-card {
-        border: 1px solid #dfe6e9;
-        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 14px;
         padding: 14px;
-        background: #fafcfe;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
       }
       .history-title {
         margin: 0 0 8px;
         font-size: 16px;
         font-weight: 700;
-        color: #34495e;
+        color: #f2f7ff;
+      }
+      body[data-theme="light"] .history-title,
+      body[data-theme="light"] .last-game-item strong,
+      body[data-theme="light"] th,
+      body[data-theme="light"] td {
+        color: #0f172a;
       }
       .history-controls {
         display: flex;
@@ -128,19 +329,39 @@
       }
       .history-select {
         padding: 7px 10px;
-        border: 1px solid #d0d7de;
+        border: 1px solid rgba(255, 255, 255, 0.28);
         border-radius: 8px;
         font-size: 14px;
-        background: #fff;
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--text-main);
+      }
+      body[data-theme="dark"] .history-select {
+        background: rgba(15, 23, 42, 0.45);
+        color: #e2e8f0;
+        border-color: rgba(148, 163, 184, 0.35);
+      }
+      body[data-theme="dark"] .history-select option {
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      body[data-theme="light"] .history-select {
+        background: rgba(255, 255, 255, 0.9);
+        color: #0f172a;
+        border-color: rgba(148, 163, 184, 0.6);
+      }
+      body[data-theme="light"] .history-select option {
+        color: #0f172a;
+        background: #ffffff;
       }
       .button-secondary {
         margin-top: 0;
-        background-color: #e74c3c;
+        background: linear-gradient(135deg, #ff7675, #f368e0);
         padding: 9px 14px;
         font-size: 14px;
+        box-shadow: 0 10px 26px rgba(225, 29, 72, 0.3);
       }
       .button-secondary:hover {
-        background-color: #c0392b;
+        box-shadow: 0 14px 30px rgba(225, 29, 72, 0.4);
       }
       .last-game-grid {
         display: grid;
@@ -150,8 +371,12 @@
       }
       .last-game-item strong {
         display: block;
-        color: #2c3e50;
+        color: #dce8ff;
         margin-bottom: 2px;
+      }
+      body[data-theme="light"] .last-game-item span,
+      body[data-theme="light"] #theme-mode {
+        color: #1e293b;
       }
       .history-table-wrap {
         overflow-x: auto;
@@ -164,38 +389,43 @@
       th,
       td {
         padding: 8px 6px;
-        border-bottom: 1px solid #ecf0f1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
         text-align: left;
         white-space: nowrap;
+        color: #ebf2ff;
       }
       th {
-        color: #2c3e50;
+        color: #bcd2f5;
         font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.4px;
       }
       .rank-1 {
-        color: #d4ac0d;
+        color: #ffe18a;
         font-weight: bold;
       }
       .rank-2 {
-        color: #7f8c8d;
+        color: #d7dee8;
         font-weight: bold;
       }
       .rank-3 {
-        color: #a04000;
+        color: #ffb690;
         font-weight: bold;
       }
       #no-history {
         font-size: 14px;
-        color: #7f8c8d;
+        color: #c7d5f0;
         margin: 4px 0 0;
+      }
+      body[data-theme="light"] #no-history,
+      body[data-theme="light"] #chart-empty {
+        color: #64748b;
       }
       .chart-wrap {
         margin-top: 12px;
-        border: 1px solid #ecf0f1;
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 10px;
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
         padding: 8px;
       }
       #performance-chart {
@@ -205,12 +435,15 @@
       }
       #chart-empty {
         margin: 8px 0 2px;
-        color: #7f8c8d;
+        color: #c7d5f0;
         font-size: 13px;
       }
       @media (max-width: 640px) {
         .container {
           padding: 24px 16px;
+        }
+        .top-controls {
+          justify-content: center;
         }
         .question-box {
           font-size: 40px;
@@ -225,7 +458,17 @@
       /* A little animation when leveling up */
       .level-up-anim {
         animation: pop 0.5s ease-in-out;
-        color: #9b59b6;
+        color: #67e8f9;
+      }
+      @keyframes fade-rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       @keyframes pop {
         0% {
@@ -243,6 +486,22 @@
   </head>
   <body>
     <div class="container">
+      <div class="top-controls">
+        <div class="theme-switch">
+          <label for="theme-toggle">Theme</label>
+          <label
+            class="switch-shell"
+            for="theme-toggle"
+            aria-label="Toggle light and dark theme"
+          >
+            <input id="theme-toggle" type="checkbox" />
+            <span class="switch-track"></span>
+            <span class="switch-thumb"></span>
+          </label>
+          <span id="theme-mode" class="theme-mode">Dark</span>
+        </div>
+      </div>
+
       <div id="start-screen">
         <h1>Speed Math: Escalation</h1>
         <p>Solve questions fast. The more you solve, the harder they get!</p>
@@ -355,6 +614,7 @@
       let currentAnswer = 0;
       let currentLevel = 1;
       const STORAGE_KEY = "speed_math_history_v1";
+      const THEME_KEY = "speed_math_theme_v1";
 
       // DOM Elements
       const startScreen = document.getElementById("start-screen");
@@ -377,6 +637,20 @@
       const clearHistoryBtn = document.getElementById("clear-history-btn");
       const chartEl = document.getElementById("performance-chart");
       const chartEmptyEl = document.getElementById("chart-empty");
+      const themeToggleEl = document.getElementById("theme-toggle");
+      const themeModeEl = document.getElementById("theme-mode");
+
+      function getCurrentTheme() {
+        return document.body.dataset.theme === "light" ? "light" : "dark";
+      }
+
+      function applyTheme(theme) {
+        const nextTheme = theme === "light" ? "light" : "dark";
+        document.body.dataset.theme = nextTheme;
+        themeToggleEl.checked = nextTheme === "light";
+        themeModeEl.innerText = nextTheme === "light" ? "Light" : "Dark";
+        localStorage.setItem(THEME_KEY, nextTheme);
+      }
 
       function loadHistory() {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -430,6 +704,11 @@
         const ctx = chartEl.getContext("2d");
         const width = chartEl.width;
         const height = chartEl.height;
+        const isLight = getCurrentTheme() === "light";
+        const axisColor = isLight ? "#94a3b8" : "#cbd5e1";
+        const lineColor = isLight ? "#0284c7" : "#3498db";
+        const dotColor = isLight ? "#0f766e" : "#2ecc71";
+        const textColor = isLight ? "#0f172a" : "#e2e8f0";
 
         ctx.clearRect(0, 0, width, height);
 
@@ -448,7 +727,7 @@
         const chartWidth = width - padding.left - padding.right;
         const chartHeight = height - padding.top - padding.bottom;
 
-        ctx.strokeStyle = "#cbd5e1";
+        ctx.strokeStyle = axisColor;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(padding.left, padding.top);
@@ -461,7 +740,7 @@
             ? chartWidth / (plotData.length - 1)
             : chartWidth / 2;
 
-        ctx.strokeStyle = "#3498db";
+        ctx.strokeStyle = lineColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
 
@@ -481,7 +760,7 @@
         });
         ctx.stroke();
 
-        ctx.fillStyle = "#2ecc71";
+        ctx.fillStyle = dotColor;
         plotData.forEach((entry, index) => {
           const x =
             plotData.length === 1
@@ -494,7 +773,7 @@
           ctx.fill();
         });
 
-        ctx.fillStyle = "#2c3e50";
+        ctx.fillStyle = textColor;
         ctx.font = "12px Segoe UI";
         ctx.fillText("Score", 8, 14);
         ctx.fillText("Games", width - 54, height - 10);
@@ -564,6 +843,11 @@
           return;
         }
         saveHistory([]);
+        updateHistoryUI();
+      });
+
+      themeToggleEl.addEventListener("change", () => {
+        applyTheme(themeToggleEl.checked ? "light" : "dark");
         updateHistoryUI();
       });
 
@@ -670,8 +954,9 @@
         saveCurrentGame();
       }
 
+      const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+      applyTheme(savedTheme);
       updateHistoryUI();
     </script>
   </body>
 </html>
-
