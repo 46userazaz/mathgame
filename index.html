@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1-Minute Speed Math - Dynamic Leveling</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 760px;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 26px;
+            color: #2c3e50;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        .time-text { color: #e74c3c; }
+        .score-text { color: #27ae60; }
+        .level-text { color: #8e44ad; }
+        
+        .question-box {
+            font-size: 54px;
+            font-weight: bold;
+            margin: 30px 0;
+            letter-spacing: 2px;
+            min-height: 80px;
+        }
+        input[type="number"] {
+            width: 80%;
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus {
+            border-color: #3498db;
+        }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #game-screen, #end-screen {
+            display: none;
+        }
+        .history-area {
+            margin-top: 24px;
+            text-align: left;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+        .history-card {
+            border: 1px solid #dfe6e9;
+            border-radius: 10px;
+            padding: 14px;
+            background: #fafcfe;
+        }
+        .history-title {
+            margin: 0 0 8px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #34495e;
+        }
+        .last-game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(100px, 1fr));
+            gap: 8px;
+            font-size: 15px;
+        }
+        .last-game-item strong {
+            display: block;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+        .history-table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #ecf0f1;
+            text-align: left;
+            white-space: nowrap;
+        }
+        th {
+            color: #2c3e50;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .rank-1 {
+            color: #d4ac0d;
+            font-weight: bold;
+        }
+        .rank-2 {
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        .rank-3 {
+            color: #a04000;
+            font-weight: bold;
+        }
+        #no-history {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin: 4px 0 0;
+        }
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 16px;
+            }
+            .question-box {
+                font-size: 40px;
+            }
+            .last-game-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* A little animation when leveling up */
+        .level-up-anim {
+            animation: pop 0.5s ease-in-out;
+            color: #9b59b6;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); color: #f1c40f; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="start-screen">
+            <h1>Speed Math: Escalation</h1>
+            <p>Solve questions fast. The more you solve, the harder they get!</p>
+            <ul style="text-align: left; margin-bottom: 20px;">
+                <li><strong>Level 1:</strong> Basics (1-20)</li>
+                <li><strong>Level 2:</strong> Intermediate (1-50)</li>
+                <li><strong>Level 3+:</strong> Advanced numbers!</li>
+            </ul>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <div id="game-screen">
+            <div class="stats">
+                <div class="time-text">Time: <span id="time">60</span>s</div>
+                <div class="level-text" id="level-container">Level: <span id="level">1</span></div>
+                <div class="score-text">Score: <span id="score">0</span></div>
+            </div>
+            <div class="question-box" id="question">--</div>
+            <input type="number" id="answer" placeholder="Type answer..." autocomplete="off">
+        </div>
+
+        <div id="end-screen">
+            <h1>Time's Up!</h1>
+            <p style="font-size: 20px;">Final Score: <strong id="final-score" style="color: #27ae60; font-size: 28px;">0</strong></p>
+            <p style="font-size: 20px;">Highest Level: <strong id="final-level" style="color: #8e44ad; font-size: 28px;">1</strong></p>
+            <button onclick="startGame()">Play Again</button>
+        </div>
+
+        <div class="history-area">
+            <div class="history-card">
+                <p class="history-title">Last Game</p>
+                <div class="last-game-grid">
+                    <div class="last-game-item">
+                        <strong>Score</strong>
+                        <span id="last-score">-</span>
+                    </div>
+                    <div class="last-game-item">
+                        <strong>Level</strong>
+                        <span id="last-level">-</span>
+                    </div>
+                    <div class="last-game-item">
+                        <strong>Played On</strong>
+                        <span id="last-date">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-card">
+                <p class="history-title">Performance Dashboard (Ranked)</p>
+                <div class="history-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Score</th>
+                                <th>Level</th>
+                                <th>Played On</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+                <p id="no-history">No completed games yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 60;
+        let timer;
+        let currentAnswer = 0;
+        let currentLevel = 1;
+        const STORAGE_KEY = 'speed_math_history_v1';
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const timeEl = document.getElementById('time');
+        const scoreEl = document.getElementById('score');
+        const levelEl = document.getElementById('level');
+        const levelContainer = document.getElementById('level-container');
+        const questionEl = document.getElementById('question');
+        const inputEl = document.getElementById('answer');
+        const finalScoreEl = document.getElementById('final-score');
+        const finalLevelEl = document.getElementById('final-level');
+        const lastScoreEl = document.getElementById('last-score');
+        const lastLevelEl = document.getElementById('last-level');
+        const lastDateEl = document.getElementById('last-date');
+        const historyBodyEl = document.getElementById('history-body');
+        const noHistoryEl = document.getElementById('no-history');
+
+        function loadHistory() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                return [];
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function saveHistory(history) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+        }
+
+        function formatDate(isoDate) {
+            const d = new Date(isoDate);
+            return d.toLocaleString();
+        }
+
+        function updateHistoryUI() {
+            const history = loadHistory();
+            const lastGame = history[0];
+
+            if (lastGame) {
+                lastScoreEl.innerText = lastGame.score;
+                lastLevelEl.innerText = lastGame.level;
+                lastDateEl.innerText = formatDate(lastGame.playedAt);
+            } else {
+                lastScoreEl.innerText = '-';
+                lastLevelEl.innerText = '-';
+                lastDateEl.innerText = '-';
+            }
+
+            const ranked = [...history].sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                if (b.level !== a.level) {
+                    return b.level - a.level;
+                }
+                return new Date(b.playedAt) - new Date(a.playedAt);
+            });
+
+            historyBodyEl.innerHTML = '';
+            if (ranked.length === 0) {
+                noHistoryEl.style.display = 'block';
+                return;
+            }
+
+            noHistoryEl.style.display = 'none';
+            ranked.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                tr.innerHTML = `
+                    <td class="${rankClass}">#${index + 1}</td>
+                    <td>${entry.score}</td>
+                    <td>${entry.level}</td>
+                    <td>${formatDate(entry.playedAt)}</td>
+                `;
+                historyBodyEl.appendChild(tr);
+            });
+        }
+
+        function saveCurrentGame() {
+            const history = loadHistory();
+            history.unshift({
+                score,
+                level: currentLevel,
+                playedAt: new Date().toISOString()
+            });
+            const limitedHistory = history.slice(0, 30);
+            saveHistory(limitedHistory);
+            updateHistoryUI();
+        }
+
+        // Start Game
+        function startGame() {
+            score = 0;
+            currentLevel = 1;
+            timeLeft = 60;
+            
+            scoreEl.innerText = score;
+            levelEl.innerText = currentLevel;
+            timeEl.innerText = timeLeft;
+            
+            startScreen.style.display = 'none';
+            endScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            
+            inputEl.value = '';
+            inputEl.focus();
+
+            generateQuestion();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timeEl.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // Generate Math Question Based on Level
+        function generateQuestion() {
+            const operations = ['+', '-', '*', '/'];
+            const op = operations[Math.floor(Math.random() * operations.length)];
+            let num1, num2;
+
+            // Difficulty Multipliers based on Current Level
+            // Level 1: Add up to 20, Mult up to 5.
+            // Level 2: Add up to 50, Mult up to 9.
+            // Level 3: Add up to 80, Mult up to 13. etc.
+            let addSubMax = 20 + ((currentLevel - 1) * 30); 
+            let multDivMax = 5 + ((currentLevel - 1) * 4);  
+
+            if (op === '+') {
+                num1 = Math.floor(Math.random() * addSubMax) + 1;
+                num2 = Math.floor(Math.random() * addSubMax) + 1;
+                currentAnswer = num1 + num2;
+            } 
+            else if (op === '-') {
+                let a = Math.floor(Math.random() * addSubMax) + 1;
+                let b = Math.floor(Math.random() * addSubMax) + 1;
+                num1 = Math.max(a, b); 
+                num2 = Math.min(a, b);
+                currentAnswer = num1 - num2;
+            } 
+            else if (op === '*') {
+                num1 = Math.floor(Math.random() * multDivMax) + 2; 
+                num2 = Math.floor(Math.random() * multDivMax) + 2; 
+                currentAnswer = num1 * num2;
+            } 
+            else if (op === '/') {
+                let a = Math.floor(Math.random() * multDivMax) + 2;
+                let b = Math.floor(Math.random() * multDivMax) + 2;
+                num1 = a * b; 
+                num2 = a;     
+                currentAnswer = b; 
+            }
+
+            const displayOp = op === '*' ? '×' : op === '/' ? '÷' : op;
+            questionEl.innerText = `${num1} ${displayOp} ${num2}`;
+        }
+
+        // Input Check & Level Up Logic
+        inputEl.addEventListener('input', (e) => {
+            const userAnswer = parseInt(e.target.value, 10);
+            
+            if (userAnswer === currentAnswer) {
+                score++;
+                scoreEl.innerText = score;
+                inputEl.value = ''; 
+
+                // LEVEL UP LOGIC: Increase level every 5 correct answers
+                let newLevel = Math.floor(score / 5) + 1;
+                
+                if (newLevel > currentLevel) {
+                    currentLevel = newLevel;
+                    levelEl.innerText = currentLevel;
+                    
+                    // Trigger a quick CSS animation to show the level went up
+                    levelContainer.classList.remove('level-up-anim');
+                    void levelContainer.offsetWidth; // trigger reflow to restart animation
+                    levelContainer.classList.add('level-up-anim');
+                }
+
+                generateQuestion(); 
+            }
+        });
+
+        // End Game
+        function endGame() {
+            clearInterval(timer);
+            gameScreen.style.display = 'none';
+            endScreen.style.display = 'block';
+            finalScoreEl.innerText = score;
+            finalLevelEl.innerText = currentLevel;
+            saveCurrentGame();
+        }
+
+        updateHistoryUI();
+    </script>
+</body>
+</html>
